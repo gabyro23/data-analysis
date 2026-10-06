@@ -1,0 +1,931 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Dynamic Visual Analysis</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;700&family=Inria+Serif:ital,wght@1,400;1,700&display=swap" rel="stylesheet">
+<script src="https://cdn.tailwindcss.com"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.3.2/papaparse.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+tailwind.config = {
+  theme: { extend: {
+    fontFamily: { sans: ['Inter', 'sans-serif'], serif: ['"Inria Serif"', 'serif'] },
+    colors: {
+      ink:      '#1B043F',
+      muted:    '#5B5773',
+      line:     '#D3DCF2',
+      canvas:   '#F5F7FC',
+      primary: { DEFAULT: '#FF4F00', hover: '#E04500', soft: '#FFEDE5' },
+      grape:   { DEFAULT: '#611BC5', hover: '#4E139F', soft: '#EFE7FB' },
+      info:    { DEFAULT: '#0066FF', soft: '#E5F0FF' },
+      accent:  '#F971FF',
+      ok:      { DEFAULT: '#0F8A5F', soft: '#E3F4EC' },
+      warn:    { DEFAULT: '#B86E00', soft: '#FFF3DC' },
+      danger:  { DEFAULT: '#D6283B', soft: '#FCE6E8' }
+    }
+  } }
+}
+</script>
+<style>
+  .table-scroll { max-height: 400px; overflow-y: auto; }
+</style>
+</head>
+<body class="bg-canvas text-ink font-sans antialiased min-h-screen">
+
+  <header class="bg-ink text-white">
+    <div class="h-1 bg-gradient-to-r from-grape to-primary"></div>
+    <div class="h-16 flex items-center justify-between max-w-7xl mx-auto px-6">
+      <div class="flex items-center gap-3">
+        <svg class="h-5 w-auto shrink-0" aria-label="Logo" width="124" height="25" viewBox="0 0 124 25" fill="none" xmlns="http://www.w3.org/2000/svg" xmlns:c2pa="http://c2pa.org/manifest"><path fill-rule="evenodd" clip-rule="evenodd" d="M54.4316 0C53.827 0 53.2579 0.236658 52.8301 0.667884L48.0652 5.4622C47.6374 5.89263 47.4014 6.46442 47.4014 7.07354C47.4014 7.68265 47.6366 8.25445 48.0652 8.68488C48.493 9.11531 49.062 9.35276 49.6666 9.35276C50.2712 9.35276 50.8403 9.1161 51.2681 8.68488L56.033 3.88977C56.4608 3.45934 56.6968 2.88675 56.6968 2.27843C56.6968 1.67011 56.4608 1.09752 56.033 0.66709C55.6052 0.236658 55.037 0 54.4316 0ZM53.22 0.447903C53.1308 0.507465 53.0456 0.574968 52.9651 0.64803C53.0456 0.574174 53.1308 0.507465 53.22 0.447903ZM51.2129 8.62929C51.1355 8.70711 51.0534 8.77859 50.9666 8.84291C51.0526 8.77859 51.1347 8.70711 51.2129 8.62929ZM89.7006 0.357818H65.6762C64.471 0.357818 63.4907 1.34416 63.4907 2.55683C63.4907 3.76951 64.471 4.75585 65.6762 4.75585H74.2708C74.9622 4.78682 75.5044 5.35623 75.5044 6.05191V22.7816C75.525 24.0991 76.6268 24.8861 77.6797 24.8861C78.0767 24.8861 78.6576 24.7765 79.1746 24.2571C79.563 23.8664 79.7832 23.347 79.795 22.8014V6.0535C79.795 5.37052 80.3783 4.7892 81.0958 4.75743H89.7006C90.9058 4.75743 91.8861 3.7703 91.8861 2.55763C91.8861 1.34495 90.9058 0.358612 89.7006 0.358612V0.357818ZM21.4418 4.75791H5.59211L5.59053 4.75871C4.89911 4.78968 4.35687 5.3583 4.35687 6.05477V10.3035L16.5411 10.3019C17.7464 10.3019 18.7267 11.2883 18.7267 12.5009C18.7267 13.7136 17.7464 14.6999 16.5411 14.6999H4.35766V18.9383C4.35766 19.6539 4.93621 20.2368 5.64815 20.2368L21.441 20.2431C22.647 20.2431 23.6273 21.2295 23.6273 22.4422C23.6273 23.6548 22.647 24.6412 21.4418 24.6412H1.45229C0.651163 24.6412 0 23.986 0 23.1799V1.82034C0 1.01506 0.651163 0.35909 1.45229 0.35909H21.4418C22.647 0.35909 23.6273 1.34543 23.6273 2.5581C23.6273 3.77078 22.647 4.75791 21.4418 4.75791ZM105.14 20.236L120.933 20.2423V20.2431C122.139 20.2431 123.119 21.2295 123.119 22.4422C123.119 23.6548 122.139 24.6412 120.934 24.6412H100.944C100.143 24.6412 99.4918 23.986 99.4918 23.1799V1.82034C99.4918 1.01506 100.143 0.35909 100.944 0.35909H120.934C122.139 0.35909 123.119 1.34543 123.119 2.5581C123.119 3.77078 122.139 4.75791 120.934 4.75791H105.084C104.392 4.78889 103.849 5.3575 103.849 6.05398V10.3027L116.034 10.3011C117.239 10.3011 118.219 11.2875 118.219 12.5001C118.219 13.7128 117.239 14.6991 116.034 14.6991H103.849V18.9376C103.849 19.6531 104.428 20.236 105.14 20.236ZM37.2799 16.3152C37.7077 15.8848 38.276 15.6474 38.8814 15.6474C39.4868 15.6474 40.055 15.8848 40.4828 16.3152C40.9098 16.7449 41.1451 17.3175 41.1451 17.9266C41.1451 18.5357 40.9098 19.1083 40.4828 19.5379L35.7179 24.3322C35.2901 24.7635 34.721 25.0001 34.1164 25.0001C33.5118 25.0001 32.9428 24.7627 32.515 24.3322C31.6318 23.4436 31.6318 21.9982 32.515 21.1096L37.2799 16.3152ZM39.9106 15.9849C39.8483 15.9515 39.7835 15.9206 39.7188 15.8936C39.7843 15.9206 39.8483 15.9515 39.9106 15.9849ZM38.0432 15.8936C38.1742 15.8388 38.3107 15.7975 38.4504 15.7697C38.3107 15.7975 38.1742 15.8396 38.0432 15.8936ZM33.1338 24.6864C33.1638 24.7015 33.1938 24.7158 33.2245 24.7301C33.1938 24.7166 33.1638 24.7015 33.1338 24.6864ZM33.601 24.8588C33.5253 24.8405 33.4511 24.8183 33.3785 24.7921C33.4511 24.8183 33.5261 24.8405 33.601 24.8588ZM34.1165 0C34.7218 0 35.2901 0.237452 35.7179 0.667884L35.7187 0.668678L40.4836 5.46299C40.9107 5.89263 41.1459 6.46521 41.1459 7.07433C41.1459 7.68345 40.9107 8.25603 40.4836 8.68567C40.0559 9.1161 39.4868 9.35355 38.8822 9.35355C38.2776 9.35355 37.7085 9.1161 37.2807 8.68567L32.5158 3.89056C32.0872 3.46013 31.852 2.88834 31.852 2.27922C31.852 1.67011 32.0872 1.09832 32.515 0.667884C32.9428 0.237452 33.5111 0 34.1165 0ZM32.571 0.724269C32.6484 0.646442 32.7305 0.574968 32.8173 0.510641C32.7313 0.574968 32.6492 0.646442 32.571 0.724269ZM33.2798 0.246188C33.3777 0.204892 33.4795 0.171537 33.5829 0.14533C33.4795 0.171537 33.3785 0.204892 33.2798 0.246188ZM34.1172 0.0794155C33.9349 0.0794155 33.7558 0.101652 33.5829 0.14533C33.7558 0.101652 33.9341 0.0794155 34.1172 0.0794155ZM37.3368 8.62849C37.4915 8.78494 37.6651 8.91439 37.853 9.01524C37.6659 8.91359 37.4915 8.78414 37.3368 8.62849ZM37.853 9.01524C37.9153 9.0486 37.9792 9.07957 38.0447 9.10657C37.98 9.07957 37.9153 9.0486 37.853 9.01524ZM38.1442 9.14548C38.2113 9.16931 38.2792 9.18996 38.3478 9.20743C38.2792 9.18996 38.2105 9.16931 38.1442 9.14548ZM40.4276 8.62928C40.8537 8.20052 41.0669 7.63739 41.0669 7.07434C41.067 7.63759 40.8539 8.20077 40.4276 8.62928ZM51.2671 16.3132C50.8393 15.8828 50.2702 15.6453 49.6656 15.6453C49.061 15.6453 48.492 15.882 48.0642 16.3124C47.181 17.2011 47.181 18.6464 48.0642 19.5351L52.8291 24.3294C53.2569 24.7598 53.8252 24.9973 54.4306 24.9973C55.036 24.9973 55.6042 24.7606 56.032 24.3294C56.4598 23.899 56.6958 23.3264 56.6958 22.7181C56.6958 22.1098 56.4598 21.5372 56.032 21.1067L51.2671 16.3124V16.3132ZM50.5023 15.8915C50.5678 15.9185 50.6317 15.9495 50.6941 15.9828C50.6317 15.9495 50.567 15.9185 50.5023 15.8915ZM49.1313 15.7915C49.2307 15.7668 49.3318 15.7486 49.4352 15.7382C49.3326 15.7494 49.2307 15.7668 49.1313 15.7915ZM48.3657 16.156C48.2789 16.2203 48.1968 16.2918 48.1194 16.3696C48.1976 16.2918 48.2797 16.2203 48.3657 16.156ZM47.84 16.7143C47.9197 16.5928 48.0129 16.4768 48.1194 16.3696C48.0129 16.4768 47.9197 16.592 47.84 16.7143ZM48.1194 19.4803C48.0129 19.3731 47.9197 19.2579 47.84 19.1356C47.9197 19.2571 48.0129 19.3731 48.1194 19.4803ZM53.4637 24.6939C53.4882 24.7058 53.5134 24.7178 53.5387 24.7297C53.5134 24.7185 53.4882 24.7066 53.4637 24.6939ZM42.2013 12.3454C42.2013 11.0755 43.2282 10.0423 44.4903 10.0423C45.7523 10.0423 46.7792 11.0755 46.7792 12.3454C46.7792 13.6152 45.7523 14.6484 44.4903 14.6484C43.2282 14.6484 42.2013 13.6152 42.2013 12.3454ZM42.3055 12.0078C42.3166 11.934 42.3316 11.8617 42.3497 11.791C42.3316 11.8617 42.3166 11.9348 42.3055 12.0078ZM46.0538 13.9186C46.1036 13.8685 46.1517 13.8153 46.1967 13.7605C46.1517 13.8153 46.1044 13.8685 46.0538 13.9186Z" fill="#FFFFFF"></path></svg>
+        <span class="h-5 w-px bg-white/20"></span>
+        <span class="text-lg font-bold">Dynamic <span class="font-serif italic font-normal">Analysis</span></span>
+      </div>
+      <nav class="flex gap-1 p-1 bg-white/10 rounded-lg">
+        <button class="px-4 py-1.5 text-sm font-medium rounded-md bg-white text-ink">Dashboard</button>
+      </nav>
+    </div>
+  </header>
+
+  <section class="bg-white border-b border-line">
+    <div class="max-w-7xl mx-auto px-6 py-5 flex flex-col lg:flex-row gap-6 lg:items-center lg:justify-between">
+      <div class="flex flex-col gap-1 max-w-xl">
+        <span class="text-xs font-medium uppercase tracking-wide text-muted">About this tool</span>
+        <p class="text-sm text-ink">Upload any CSV report and configure the columns to analyze variations. Select the report type.</p>
+      </div>
+      <ol class="flex flex-col sm:flex-row gap-4 sm:gap-6">
+        <li class="flex items-center gap-2"><span class="w-6 h-6 rounded-full bg-grape-soft text-grape text-xs font-bold flex items-center justify-center shrink-0">1</span><span class="text-sm">Configure and Upload CSV</span></li>
+        <li class="flex items-center gap-2"><span class="w-6 h-6 rounded-full bg-grape-soft text-grape text-xs font-bold flex items-center justify-center shrink-0">2</span><span class="text-sm">Configure dimensions</span></li>
+        <li class="flex items-center gap-2"><span class="w-6 h-6 rounded-full bg-grape-soft text-grape text-xs font-bold flex items-center justify-center shrink-0">3</span><span class="text-sm">Analyze variations</span></li>
+      </ol>
+    </div>
+  </section>
+
+  <main class="max-w-7xl mx-auto px-6 py-8 flex flex-col gap-6">
+
+    <!-- STEP 1: FILE UPLOAD -->
+    <section class="bg-white border border-line rounded-xl p-6 flex flex-col gap-4">
+      <div class="flex flex-col gap-1">
+        <h2 class="text-base font-bold text-ink">1. Configure Report and Upload CSV</h2>
+        <p class="text-xs text-muted">Select the report access, type, and upload the data for analysis.</p>
+      </div>
+
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <div class="flex flex-col gap-4 justify-center">
+              <div>
+                  <label class="block text-xs font-medium uppercase tracking-wide text-muted mb-1.5">Report Access</label>
+                  <select id="reportAccessSelect" class="w-full px-3 py-2 rounded-lg bg-white border border-line text-sm text-ink focus:outline-none focus:border-grape focus:ring-2 focus:ring-grape/20">
+                      <option value="admin">Admin</option>
+                      <option value="am_psm">AM/PSM</option>
+                      <option value="publisher">Publishers</option>
+                  </select>
+              </div>
+              <div>
+                  <label class="block text-xs font-medium uppercase tracking-wide text-muted mb-1.5">Report Type</label>
+                  <select id="reportTypeSelect" class="w-full px-3 py-2 rounded-lg bg-white border border-line text-sm text-ink focus:outline-none focus:border-grape focus:ring-2 focus:ring-grape/20">
+                      <option value="global">Global Report</option>
+                      <option value="platform_ssp">Platform SSP report</option>
+                      <option value="fees">Fees Report</option>
+                  </select>
+              </div>
+          </div>
+          <div class="flex items-stretch">
+             <label id="dropZone" class="w-full border-2 border-dashed border-line rounded-xl p-8 text-center bg-canvas hover:border-grape cursor-pointer flex flex-col gap-1 items-center justify-center h-full min-h-[140px] transition-colors">
+              <input type="file" id="csvFileInput" accept=".csv" class="hidden">
+              <span class="text-sm font-medium">Drop your .csv file here</span>
+              <span class="text-xs text-muted">or click to browse</span>
+            </label>
+          </div>
+      </div>
+    </section>
+
+    <!-- STEP 2: CONFIGURATION -->
+    <section id="configSection" class="hidden bg-white border border-line rounded-xl p-6 flex flex-col gap-4">
+      <div class="flex flex-col gap-1">
+        <h2 class="text-base font-bold text-ink">2. Configure your Dashboard</h2>
+        <p class="text-xs text-muted">Select how to organize and which metrics to analyze.</p>
+      </div>
+      
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <div class="flex flex-col gap-1.5">
+          <label class="text-xs font-medium uppercase tracking-wide text-muted">1. Time Column (X-Axis)</label>
+          <select id="configTimeCol" class="w-full px-3 py-2 rounded-lg bg-white border border-line text-sm text-ink focus:outline-none focus:border-grape focus:ring-2 focus:ring-grape/20"></select>
+        </div>
+        <div class="flex flex-col gap-1.5">
+          <label class="text-xs font-medium uppercase tracking-wide text-muted">2. Grouping Column (Dimension)</label>
+          <select id="configDimCol" class="w-full px-3 py-2 rounded-lg bg-white border border-line text-sm text-ink focus:outline-none focus:border-grape focus:ring-2 focus:ring-grape/20"></select>
+        </div>
+      </div>
+
+      <div class="flex flex-col gap-1.5">
+        <label class="text-xs font-medium uppercase tracking-wide text-muted">3. Metrics to analyze</label>
+        <div id="configMetricsContainer" class="grid grid-cols-2 md:grid-cols-4 gap-2 bg-canvas p-4 rounded-lg border border-line"></div>
+      </div>
+
+      <div class="flex gap-3 justify-end mt-2">
+        <button id="generateBtn" class="px-4 py-2 rounded-lg bg-primary hover:bg-primary-hover text-white text-sm font-medium">Generate Dashboard</button>
+      </div>
+    </section>
+
+    <div id="loadingIndicator" class="hidden py-12 text-center text-muted text-sm">
+        Processing data...
+    </div>
+
+    <div id="mainContent" class="hidden flex flex-col gap-6">
+      
+      <section class="bg-white border border-line rounded-xl p-6 flex flex-col gap-4">
+          <div class="flex flex-col md:flex-row gap-6">
+            <div class="w-full flex flex-col gap-1.5">
+              <label class="text-xs font-medium uppercase tracking-wide text-muted">Filter by Dimension</label>
+              <select id="dimFilter" class="w-full px-3 py-2 rounded-lg bg-white border border-line text-sm text-ink focus:outline-none focus:border-grape focus:ring-2 focus:ring-grape/20">
+                <option value="ALL">-- All Dimensions --</option>
+              </select>
+            </div>
+            <div class="w-full flex flex-col gap-1.5">
+              <label class="text-xs font-medium uppercase tracking-wide text-muted">Filter by Metric</label>
+              <select id="metricFilter" class="w-full px-3 py-2 rounded-lg bg-white border border-line text-sm text-ink focus:outline-none focus:border-grape focus:ring-2 focus:ring-grape/20">
+                <option value="ALL">-- All Metrics --</option>
+              </select>
+            </div>
+          </div>
+          
+          <div class="flex flex-col md:flex-row gap-6 pt-4 border-t border-line mt-2">
+            <div class="w-full md:w-1/2 flex flex-col gap-1.5">
+              <label class="text-xs font-medium uppercase tracking-wide text-muted">Start Period</label>
+              <select id="timeStartFilter" class="w-full px-3 py-2 rounded-lg bg-white border border-line text-sm text-ink focus:outline-none focus:border-grape focus:ring-2 focus:ring-grape/20">
+              </select>
+            </div>
+            <div class="w-full md:w-1/2 flex flex-col gap-1.5">
+              <label class="text-xs font-medium uppercase tracking-wide text-muted">End Period</label>
+              <select id="timeEndFilter" class="w-full px-3 py-2 rounded-lg bg-white border border-line text-sm text-ink focus:outline-none focus:border-grape focus:ring-2 focus:ring-grape/20">
+              </select>
+            </div>
+          </div>
+
+          <div class="flex items-center gap-4 pt-4 border-t border-line mt-2">
+            <label class="flex items-center gap-2 cursor-pointer">
+              <div class="w-10 h-6 rounded-full bg-line relative transition-colors duration-200 ease-in-out" id="combineChartsToggle">
+                <div class="w-5 h-5 bg-white rounded-full absolute top-0.5 left-0.5 transition-transform duration-200 ease-in-out shadow-sm"></div>
+              </div>
+              <input type="checkbox" id="combineChartsCheckbox" class="hidden">
+              <span class="text-sm font-medium text-ink">Group in a single chart (Compare oscillations)</span>
+            </label>
+            <button id="toggleAllDatasetsBtn" class="hidden px-4 py-2 rounded-lg bg-white border border-line hover:border-grape text-ink text-sm font-medium">
+              Hide all lines
+            </button>
+          </div>
+      </section>
+
+      <!-- TABS -->
+      <nav class="flex gap-1 p-1 bg-white/10 border border-line rounded-lg w-fit">
+        <button id="tabAlerts" class="px-4 py-1.5 text-sm font-medium rounded-md bg-grape text-white" onclick="switchTab('alerts')">Detailed View (Alerts > 30%)</button>
+        <button id="tabAll" class="px-4 py-1.5 text-sm font-medium rounded-md text-ink hover:bg-canvas" onclick="switchTab('all')">All Variations</button>
+      </nav>
+
+      <!-- VIEW: ALERTS -->
+      <section id="viewAlerts" class="flex flex-col gap-3">
+        <h2 class="text-base font-bold text-ink">Variation Alerts</h2>
+        <div class="overflow-x-auto border border-line rounded-xl bg-white table-scroll">
+          <table class="w-full text-sm">
+            <thead class="bg-canvas sticky top-0">
+              <tr class="text-xs font-medium uppercase tracking-wide text-muted">
+                <th class="px-4 py-3 text-left" id="colNameDim1">Dimension</th>
+                <th class="px-4 py-3 text-left">Metric</th>
+                <th class="px-4 py-3 text-left" id="colNameTime1">Period</th>
+                <th class="px-4 py-3 text-right">Variation</th>
+              </tr>
+            </thead>
+            <tbody id="alertsTableBody" class="divide-y divide-line"></tbody>
+          </table>
+          <div id="noAlertsMsg" class="hidden p-8 text-center text-xs text-muted">No variations greater than 30% for these filters.</div>
+        </div>
+      </section>
+
+      <!-- VIEW: ALL VARIATIONS -->
+      <section id="viewAll" class="hidden flex flex-col gap-3">
+        <h2 class="text-base font-bold text-ink">All Variations</h2>
+        <div class="overflow-x-auto border border-line rounded-xl bg-white table-scroll">
+          <table class="w-full text-sm">
+            <thead class="bg-canvas sticky top-0">
+              <tr class="text-xs font-medium uppercase tracking-wide text-muted">
+                <th class="px-4 py-3 text-left" id="colNameDim2">Dimension</th>
+                <th class="px-4 py-3 text-left">Metric</th>
+                <th class="px-4 py-3 text-left" id="colNameTime2">Period</th>
+                <th class="px-4 py-3 text-right">Prev. Data</th>
+                <th class="px-4 py-3 text-right">Curr. Data</th>
+                <th class="px-4 py-3 text-right">Variation</th>
+              </tr>
+            </thead>
+            <tbody id="allVariationsTableBody" class="divide-y divide-line"></tbody>
+          </table>
+        </div>
+      </section>
+
+      <section class="flex flex-col gap-3">
+        <h2 class="text-base font-bold text-ink">Evolution Charts</h2>
+        <div id="chartsContainer" class="grid grid-cols-1 md:grid-cols-2 gap-6"></div>
+      </section>
+
+    </div>
+  </main>
+
+  <!-- Chart Expansion Modal -->
+  <div id="chartModal" class="hidden fixed inset-0 z-50 bg-ink/80 flex items-center justify-center p-4 sm:p-8 backdrop-blur-sm opacity-0 transition-opacity duration-300">
+    <div class="bg-white rounded-xl w-full max-w-6xl h-[80vh] flex flex-col shadow-2xl overflow-hidden relative transform scale-95 transition-transform duration-300" id="chartModalContent">
+      <div class="flex items-center justify-between px-6 py-4 border-b border-line bg-canvas">
+        <h3 id="chartModalTitle" class="text-base font-bold text-ink">Expanded Chart</h3>
+        <div class="flex items-center gap-3">
+          <button id="downloadModalChartBtn" class="px-3 py-1.5 rounded-lg bg-white border border-line hover:border-grape text-ink text-sm font-medium flex items-center gap-2 transition-colors shadow-sm">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path></svg>
+            Download
+          </button>
+          <button id="closeChartModalBtn" class="p-2 -mr-2 text-muted hover:text-danger transition-colors rounded-lg hover:bg-danger-soft" title="Close">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+          </button>
+        </div>
+      </div>
+      <div class="p-6 flex-1 relative w-full h-full bg-white">
+        <canvas id="modalCanvas"></canvas>
+      </div>
+    </div>
+  </div>
+
+  <div id="toast" class="hidden fixed top-4 right-4 bg-ink text-white text-sm px-4 py-3 rounded-lg shadow-lg">Operation completed.</div>
+
+  <script>
+    Chart.defaults.font.family = 'Inter';
+    Chart.defaults.color = '#5B5773';
+
+    let rawCsvData = [];
+    let csvHeaders = [];
+    let configuredTimeCol = '';
+    let configuredDimCol = '';
+    let configuredMetrics = [];
+    
+    let processedData = {};
+    let allVariations = [];
+    let chartInstances = [];
+    let allDatasetsVisible = true;
+    let modalChartInstance = null;
+    let allTimeValues = []; // Array to store all unique time periods
+
+    // Colores del chart style guide
+    const chartColors = ['#611BC5', '#FF4F00', '#0066FF', '#F971FF', '#1B043F'];
+    const getMetricColor = (index) => {
+        return chartColors[index % chartColors.length];
+    };
+
+    const formatNumber = (num) => new Intl.NumberFormat('en-US', { maximumFractionDigits: 2 }).format(num);
+
+    const showToast = (msg, isError = false) => {
+        const t = document.getElementById('toast');
+        t.textContent = msg;
+        if(isError) {
+            t.classList.remove('bg-ink');
+            t.classList.add('bg-danger');
+        } else {
+            t.classList.add('bg-ink');
+            t.classList.remove('bg-danger');
+        }
+        t.classList.remove('hidden');
+        setTimeout(() => t.classList.add('hidden'), 3000);
+    }
+
+    const handleFile = (file) => {
+        if (!file) return;
+
+        document.getElementById('mainContent').classList.add('hidden');
+        Papa.parse(file, { header: true, dynamicTyping: true, skipEmptyLines: true,
+            complete: function(results) {
+                rawCsvData = results.data;
+                csvHeaders = results.meta.fields;
+                setupConfigUI();
+                showToast('CSV loaded successfully');
+            },
+            error: function() {
+                showToast('Error parsing CSV', true);
+            }
+        });
+    };
+
+    document.getElementById('csvFileInput').addEventListener('change', function(e) {
+        handleFile(e.target.files[0]);
+    });
+
+    // Drag and Drop Logic
+    const dropZone = document.getElementById('dropZone');
+
+    dropZone.addEventListener('dragover', (e) => {
+        e.preventDefault();
+        dropZone.classList.add('border-grape', 'bg-grape-soft/50');
+    });
+
+    dropZone.addEventListener('dragleave', (e) => {
+        e.preventDefault();
+        dropZone.classList.remove('border-grape', 'bg-grape-soft/50');
+    });
+
+    dropZone.addEventListener('drop', (e) => {
+        e.preventDefault();
+        dropZone.classList.remove('border-grape', 'bg-grape-soft/50');
+        
+        if (e.dataTransfer.files && e.dataTransfer.files.length > 0) {
+            const file = e.dataTransfer.files[0];
+            if (file.name.endsWith('.csv') || file.type === 'text/csv' || file.type === 'application/vnd.ms-excel') {
+                document.getElementById('csvFileInput').files = e.dataTransfer.files;
+                handleFile(file);
+            } else {
+                showToast('Please drop a valid .csv file', true);
+            }
+        }
+    });
+
+    function setupConfigUI() {
+        const timeSelect = document.getElementById('configTimeCol');
+        const dimSelect = document.getElementById('configDimCol');
+        const metricsContainer = document.getElementById('configMetricsContainer');
+        
+        timeSelect.innerHTML = '';
+        dimSelect.innerHTML = '<option value="GLOBAL">-- No dimension (Global Total) --</option>';
+        metricsContainer.innerHTML = '';
+
+        let likelyTimeCol = ''; let likelyDimCol = '';
+
+        csvHeaders.forEach(col => {
+            timeSelect.appendChild(new Option(col, col));
+            dimSelect.appendChild(new Option(col, col));
+
+            const lower = col.toLowerCase();
+            if (!likelyTimeCol && (lower.includes('date') || lower.includes('week') || lower.includes('month') || lower.includes('day'))) likelyTimeCol = col;
+            if (!likelyDimCol && (lower.includes('site') || lower.includes('platform') || lower.includes('device'))) likelyDimCol = col;
+
+            let isNumeric = false;
+            for(let i=0; i<Math.min(5, rawCsvData.length); i++) {
+                if (typeof rawCsvData[i][col] === 'number') isNumeric = true;
+            }
+
+            if (isNumeric) {
+                const wrap = document.createElement('label');
+                wrap.className = 'flex items-center gap-2 text-sm text-ink cursor-pointer';
+                wrap.innerHTML = `<input type="checkbox" value="${col}" class="metric-checkbox rounded text-grape focus:ring-grape w-4 h-4" checked> <span>${col}</span>`;
+                metricsContainer.appendChild(wrap);
+            }
+        });
+
+        if (likelyTimeCol) timeSelect.value = likelyTimeCol;
+        if (likelyDimCol) dimSelect.value = likelyDimCol;
+
+        document.getElementById('configSection').classList.remove('hidden');
+    }
+
+    document.getElementById('generateBtn').addEventListener('click', () => {
+        configuredTimeCol = document.getElementById('configTimeCol').value;
+        configuredDimCol = document.getElementById('configDimCol').value;
+        
+        const checkboxes = document.querySelectorAll('.metric-checkbox:checked');
+        configuredMetrics = Array.from(checkboxes).map(cb => cb.value);
+
+        if (configuredMetrics.length === 0) {
+            showToast("Select at least one metric.", true);
+            return;
+        }
+
+        document.getElementById('configSection').classList.add('hidden');
+        document.getElementById('loadingIndicator').classList.remove('hidden');
+        setTimeout(processData, 100);
+    });
+
+    function processData() {
+        processedData = {};
+        allVariations = [];
+        const timeSet = new Set();
+        
+        rawCsvData.forEach(row => {
+            const timeVal = row[configuredTimeCol];
+            if (timeVal === null || timeVal === undefined) return;
+            
+            timeSet.add(String(timeVal));
+            
+            const dimVal = (configuredDimCol === 'GLOBAL') ? 'Global' : row[configuredDimCol] || 'Unknown';
+            
+            if (!processedData[dimVal]) processedData[dimVal] = {};
+            if (!processedData[dimVal][timeVal]) {
+                processedData[dimVal][timeVal] = {};
+                configuredMetrics.forEach(m => processedData[dimVal][timeVal][m] = 0);
+            }
+            
+            configuredMetrics.forEach(m => { processedData[dimVal][timeVal][m] += (parseFloat(row[m]) || 0); });
+        });
+
+        allTimeValues = Array.from(timeSet).sort((a, b) => a.localeCompare(b));
+
+        Object.keys(processedData).forEach(dim => {
+            const times = Object.keys(processedData[dim]).sort((a, b) => String(a).localeCompare(String(b)));
+            
+            for (let i = 1; i < times.length; i++) {
+                const prevTime = times[i-1];
+                const currTime = times[i];
+                
+                configuredMetrics.forEach(metric => {
+                    const prevVal = processedData[dim][prevTime][metric];
+                    const currVal = processedData[dim][currTime][metric];
+                    
+                    if (prevVal > 0) {
+                        const change = ((currVal - prevVal) / prevVal) * 100;
+                        allVariations.push({
+                            dim: dim, metric: metric, time_prev: prevTime, time_curr: currTime,
+                            val_prev: prevVal, val_curr: currVal, change_pct: change, is_alert: Math.abs(change) > 30
+                        });
+                    }
+                });
+            }
+        });
+
+        const dimTitle = configuredDimCol === 'GLOBAL' ? 'Segment' : configuredDimCol;
+        document.getElementById('colNameDim1').innerText = dimTitle;
+        document.getElementById('colNameDim2').innerText = dimTitle;
+        document.getElementById('colNameTime1').innerText = configuredTimeCol;
+        document.getElementById('colNameTime2').innerText = configuredTimeCol;
+
+        populateFilters();
+        
+        document.getElementById('loadingIndicator').classList.add('hidden');
+        document.getElementById('mainContent').classList.remove('hidden');
+        
+        applyFilters();
+    }
+
+    function populateFilters() {
+        const dimFilter = document.getElementById('dimFilter');
+        const metricFilter = document.getElementById('metricFilter');
+        const timeStartFilter = document.getElementById('timeStartFilter');
+        const timeEndFilter = document.getElementById('timeEndFilter');
+        
+        dimFilter.innerHTML = '<option value="ALL">-- All Dimensions --</option>';
+        metricFilter.innerHTML = '<option value="ALL">-- All Metrics --</option>';
+        timeStartFilter.innerHTML = '';
+        timeEndFilter.innerHTML = '';
+
+        Object.keys(processedData).sort().forEach(d => dimFilter.innerHTML += `<option value="${d}">${d}</option>`);
+        configuredMetrics.forEach(m => metricFilter.innerHTML += `<option value="${m}">${m}</option>`);
+
+        allTimeValues.forEach(t => {
+            timeStartFilter.innerHTML += `<option value="${t}">${t}</option>`;
+            timeEndFilter.innerHTML += `<option value="${t}">${t}</option>`;
+        });
+
+        if (allTimeValues.length > 0) {
+            timeStartFilter.value = allTimeValues[0];
+            timeEndFilter.value = allTimeValues[allTimeValues.length - 1];
+        }
+    }
+
+    function createRowHtml(item, isCompact) {
+        const isPositive = item.change_pct > 0;
+        const isDrastic = item.is_alert;
+        
+        // Use style guide colors for status badges
+        let badgeClass = '';
+        let dotClass = 'bg-current';
+        
+        if (isDrastic) {
+            badgeClass = isPositive ? 'bg-ok-soft text-ok' : 'bg-danger-soft text-danger';
+        } else {
+            badgeClass = isPositive ? 'bg-ok-soft text-ok opacity-70' : 'bg-warn-soft text-warn opacity-70';
+        }
+
+        const sign = isPositive ? '+' : '';
+        const badgeHtml = `<span class="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-xs font-medium ${badgeClass}"><span class="h-1.5 w-1.5 rounded-full ${dotClass}"></span>${sign}${item.change_pct.toFixed(1)}%</span>`;
+        
+        if (isCompact) {
+            return `<tr class="hover:bg-canvas">
+                <td class="px-4 py-3 font-medium">${item.dim}</td>
+                <td class="px-4 py-3"><span class="bg-canvas border border-line text-xs px-2 py-1 rounded text-muted">${item.metric}</span></td>
+                <td class="px-4 py-3 text-muted text-xs">${item.time_prev} &rarr; ${item.time_curr}</td>
+                <td class="px-4 py-3 text-right">${badgeHtml}</td>
+            </tr>`;
+        } else {
+            return `<tr class="hover:bg-canvas ${isDrastic ? 'bg-warn-soft/20' : ''}">
+                <td class="px-4 py-3 font-medium">${item.dim}</td>
+                <td class="px-4 py-3 text-muted text-xs">${item.metric}</td>
+                <td class="px-4 py-3 text-muted text-xs">${item.time_prev} &rarr; ${item.time_curr}</td>
+                <td class="px-4 py-3 text-right tabular-nums text-muted">${formatNumber(item.val_prev)}</td>
+                <td class="px-4 py-3 text-right tabular-nums font-medium">${formatNumber(item.val_curr)}</td>
+                <td class="px-4 py-3 text-right">${badgeHtml}</td>
+            </tr>`;
+        }
+    }
+
+    function applyFilters() {
+        const selectedDim = document.getElementById('dimFilter').value;
+        const selectedMetric = document.getElementById('metricFilter').value;
+        const startPeriod = document.getElementById('timeStartFilter').value;
+        const endPeriod = document.getElementById('timeEndFilter').value;
+
+        let filtered = allVariations;
+        if (selectedDim !== 'ALL') filtered = filtered.filter(a => a.dim === selectedDim);
+        if (selectedMetric !== 'ALL') filtered = filtered.filter(a => a.metric === selectedMetric);
+
+        if (startPeriod && endPeriod) {
+            // Include variation if both its start and end fall within the selected boundaries
+            filtered = filtered.filter(a => 
+                a.time_prev.localeCompare(startPeriod) >= 0 && 
+                a.time_curr.localeCompare(endPeriod) <= 0
+            );
+        }
+
+        const alertsOnly = filtered.filter(a => a.is_alert);
+        const alertsTbody = document.getElementById('alertsTableBody');
+        const noAlertsMsg = document.getElementById('noAlertsMsg');
+
+        alertsTbody.innerHTML = alertsOnly.map(a => createRowHtml(a, true)).join('');
+        
+        if (alertsOnly.length === 0) {
+            alertsTbody.innerHTML = '';
+            noAlertsMsg.classList.remove('hidden');
+        } else {
+            noAlertsMsg.classList.add('hidden');
+        }
+
+        document.getElementById('allVariationsTableBody').innerHTML = filtered.map(a => createRowHtml(a, false)).join('');
+
+        renderCharts(selectedDim, selectedMetric);
+    }
+
+    document.getElementById('dimFilter').addEventListener('change', applyFilters);
+    document.getElementById('metricFilter').addEventListener('change', applyFilters);
+    document.getElementById('timeStartFilter').addEventListener('change', applyFilters);
+    document.getElementById('timeEndFilter').addEventListener('change', applyFilters);
+    
+    // Custom Toggle Logic
+    const toggleInput = document.getElementById('combineChartsCheckbox');
+    const toggleVisual = document.getElementById('combineChartsToggle');
+    const toggleKnob = toggleVisual.querySelector('div');
+
+    toggleInput.addEventListener('change', (e) => {
+        if(e.target.checked) {
+            toggleVisual.classList.remove('bg-line');
+            toggleVisual.classList.add('bg-grape');
+            toggleKnob.classList.add('translate-x-4');
+        } else {
+            toggleVisual.classList.add('bg-line');
+            toggleVisual.classList.remove('bg-grape');
+            toggleKnob.classList.remove('translate-x-4');
+        }
+        applyFilters();
+    });
+
+
+    // BOTON DE OCULTAR / MOSTRAR TODAS
+    document.getElementById('toggleAllDatasetsBtn').addEventListener('click', () => {
+        if (chartInstances.length === 1) { 
+            const chart = chartInstances[0];
+            allDatasetsVisible = !allDatasetsVisible;
+            
+            chart.data.datasets.forEach((dataset, index) => {
+                chart.setDatasetVisibility(index, allDatasetsVisible);
+            });
+            
+            // Toggle visibility of all Y axes based on global visibility
+            Object.keys(chart.options.scales).forEach(scaleId => {
+                if (scaleId !== 'x') {
+                    chart.options.scales[scaleId].display = allDatasetsVisible;
+                }
+            });
+
+            chart.update();
+            
+            const btn = document.getElementById('toggleAllDatasetsBtn');
+            btn.innerText = allDatasetsVisible ? "Hide all lines" : "Show all lines";
+            
+            if (allDatasetsVisible) {
+                btn.classList.remove('bg-canvas', 'text-muted');
+                btn.classList.add('bg-white', 'text-ink');
+            } else {
+                btn.classList.add('bg-canvas', 'text-muted');
+                btn.classList.remove('bg-white', 'text-ink');
+            }
+        }
+    });
+
+    // Download Chart Helper
+    function downloadChartImage(chartInstance, filename) {
+        // Ensure chart has a solid background before downloading (Fix for transparent PNGs)
+        const originalBg = chartInstance.canvas.style.backgroundColor;
+        chartInstance.canvas.style.backgroundColor = '#ffffff';
+        
+        const link = document.createElement('a');
+        link.download = (filename || 'chart').replace(/[^a-z0-9]/gi, '_').toLowerCase() + '.png';
+        link.href = chartInstance.toBase64Image();
+        link.click();
+        
+        // Restore background
+        chartInstance.canvas.style.backgroundColor = originalBg;
+    }
+
+    function renderCharts(selectedDim, selectedMetric) {
+        const container = document.getElementById('chartsContainer');
+        const toggleBtn = document.getElementById('toggleAllDatasetsBtn');
+        const startPeriod = document.getElementById('timeStartFilter').value;
+        const endPeriod = document.getElementById('timeEndFilter').value;
+        
+        container.innerHTML = '';
+        chartInstances.forEach(c => c.destroy());
+        chartInstances = [];
+
+        const dimsToRender = selectedDim === 'ALL' ? Object.keys(processedData) : [selectedDim];
+        const metricsToRender = selectedMetric === 'ALL' ? configuredMetrics : [selectedMetric];
+        const combine = document.getElementById('combineChartsCheckbox').checked;
+
+        let globalTimes = allTimeValues;
+        if (startPeriod && endPeriod) {
+            globalTimes = globalTimes.filter(t => t.localeCompare(startPeriod) >= 0 && t.localeCompare(endPeriod) <= 0);
+        }
+
+        if (combine) {
+            toggleBtn.classList.remove('hidden');
+            allDatasetsVisible = true;
+            toggleBtn.innerText = "Hide all lines";
+            toggleBtn.classList.add('bg-white', 'text-ink');
+            toggleBtn.classList.remove('bg-canvas', 'text-muted');
+
+            const wrapper = document.createElement('div');
+            wrapper.className = 'relative bg-white border border-line rounded-xl p-6 col-span-1 md:col-span-2 group';
+            wrapper.style.height = '500px'; 
+            
+            const actionsContainer = document.createElement('div');
+            actionsContainer.className = 'absolute top-4 right-4 flex gap-2 z-10 opacity-50 group-hover:opacity-100 transition-opacity';
+            
+            const downloadBtn = document.createElement('button');
+            downloadBtn.className = 'p-1.5 bg-white rounded-lg text-muted hover:text-grape border border-line hover:border-grape transition-all shadow-sm';
+            downloadBtn.innerHTML = `<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path></svg>`;
+            downloadBtn.title = "Download chart";
+            
+            const expandBtn = document.createElement('button');
+            expandBtn.className = 'p-1.5 bg-white rounded-lg text-muted hover:text-grape border border-line hover:border-grape transition-all shadow-sm';
+            expandBtn.innerHTML = `<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 8V4m0 0h4M4 4l5 5m11-1V4m0 0h-4m4 0l-5 5M4 16v4m0 0h4m-4 0l5-5m11 5l-5-5m5 5v-4m0 4h-4"></path></svg>`;
+            expandBtn.title = "Expand chart";
+
+            actionsContainer.appendChild(downloadBtn);
+            actionsContainer.appendChild(expandBtn);
+            wrapper.appendChild(actionsContainer);
+
+            const canvas = document.createElement('canvas');
+            wrapper.appendChild(canvas);
+            container.appendChild(wrapper);
+
+            const datasets = [];
+            const scales = { x: { grid: { color: '#D3DCF2', display: false }, ticks: { font: { family: 'Inter', size: 10 } } } };
+            
+            let colorIndex = 0;
+            
+            const uniqueMetrics = [...new Set(metricsToRender)];
+            uniqueMetrics.forEach((m, idx) => {
+                scales[m] = {
+                    type: 'linear',
+                    display: true,
+                    position: idx % 2 === 0 ? 'left' : 'right',
+                    title: { display: true, text: m, font: { family: 'Inter', size: 10} },
+                    grid: { color: '#D3DCF2', drawOnChartArea: idx === 0 }
+                };
+            });
+
+            dimsToRender.forEach(dim => {
+                metricsToRender.forEach(metric => {
+                    const dataPoints = globalTimes.map(t => (processedData[dim][t] !== undefined) ? processedData[dim][t][metric] : null);
+                    const hexColor = getMetricColor(colorIndex++);
+                    
+                    datasets.push({
+                        label: (selectedDim === 'ALL' && selectedMetric === 'ALL') ? `${dim} - ${metric}` : 
+                               (selectedDim === 'ALL') ? dim : 
+                               (selectedMetric === 'ALL') ? metric : `${dim} - ${metric}`,
+                        data: dataPoints,
+                        borderColor: hexColor,
+                        backgroundColor: 'transparent',
+                        borderWidth: 2,
+                        pointBackgroundColor: hexColor,
+                        pointRadius: 4, pointHoverRadius: 6, tension: 0.3,
+                        yAxisID: metric
+                    });
+                });
+            });
+            
+            const chart = new Chart(canvas.getContext('2d'), {
+                type: 'line',
+                data: { labels: globalTimes, datasets: datasets },
+                options: {
+                    responsive: true, maintainAspectRatio: false,
+                    interaction: { mode: 'index', intersect: false }, 
+                    plugins: {
+                        legend: { 
+                            display: true, 
+                            position: 'top', 
+                            labels: { boxWidth: 12, font: {family: 'Inter', size: 11} },
+                            onClick: function(e, legendItem, legend) {
+                                // Default toggle logic
+                                Chart.defaults.plugins.legend.onClick.call(this, e, legendItem, legend);
+                                
+                                const ci = legend.chart;
+                                // Dynamically hide Y-axis if all of its datasets are hidden
+                                Object.keys(ci.options.scales).forEach(scaleId => {
+                                    if (scaleId !== 'x') {
+                                        const isAnyVisible = ci.data.datasets.some((ds, idx) => {
+                                            return ds.yAxisID === scaleId && ci.isDatasetVisible(idx);
+                                        });
+                                        ci.options.scales[scaleId].display = isAnyVisible;
+                                    }
+                                });
+                                ci.update();
+                            }
+                        },
+                        title: { display: false },
+                        tooltip: { callbacks: { label: ctx => `${ctx.dataset.label}: ${formatNumber(ctx.raw)}` } }
+                    },
+                    scales: scales
+                }
+            });
+            chartInstances.push(chart);
+            
+            const titleStr = 'Combined Evolution Chart';
+            expandBtn.addEventListener('click', () => openExpandedChart(chart, titleStr));
+            downloadBtn.addEventListener('click', () => downloadChartImage(chart, titleStr));
+
+        } else {
+            toggleBtn.classList.add('hidden');
+
+            dimsToRender.forEach(dim => {
+                metricsToRender.forEach(metric => {
+                    const dataPoints = globalTimes.map(t => (processedData[dim][t] !== undefined) ? processedData[dim][t][metric] : null);
+                    const chartTitle = selectedDim === 'ALL' ? `${metric} - ${dim}` : metric;
+                    
+                    const wrapper = document.createElement('div');
+                    wrapper.className = 'relative bg-white border border-line rounded-xl p-6 group';
+                    wrapper.style.height = '280px';
+                    
+                    const actionsContainer = document.createElement('div');
+                    actionsContainer.className = 'absolute top-4 right-4 flex gap-2 z-10 opacity-50 group-hover:opacity-100 transition-opacity';
+                    
+                    const downloadBtn = document.createElement('button');
+                    downloadBtn.className = 'p-1.5 bg-white rounded-lg text-muted hover:text-grape border border-line hover:border-grape transition-all shadow-sm';
+                    downloadBtn.innerHTML = `<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path></svg>`;
+                    downloadBtn.title = "Download chart";
+                    
+                    const expandBtn = document.createElement('button');
+                    expandBtn.className = 'p-1.5 bg-white rounded-lg text-muted hover:text-grape border border-line hover:border-grape transition-all shadow-sm';
+                    expandBtn.innerHTML = `<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 8V4m0 0h4M4 4l5 5m11-1V4m0 0h-4m4 0l-5 5M4 16v4m0 0h4m-4 0l5-5m11 5l-5-5m5 5v-4m0 4h-4"></path></svg>`;
+                    expandBtn.title = "Expand chart";
+
+                    actionsContainer.appendChild(downloadBtn);
+                    actionsContainer.appendChild(expandBtn);
+                    wrapper.appendChild(actionsContainer);
+
+                    const canvas = document.createElement('canvas');
+                    wrapper.appendChild(canvas);
+                    container.appendChild(wrapper);
+
+                    const hexColor = getMetricColor(configuredMetrics.indexOf(metric));
+
+                    const chart = new Chart(canvas.getContext('2d'), {
+                        type: 'line',
+                        data: {
+                            labels: globalTimes,
+                            datasets: [{
+                                label: metric, data: dataPoints, borderColor: hexColor, backgroundColor: hexColor + '10', // slightly transparent bg
+                                borderWidth: 2, fill: true, tension: 0.3, pointRadius: 3
+                            }]
+                        },
+                        options: {
+                            responsive: true, maintainAspectRatio: false,
+                            plugins: {
+                                legend: { display: false },
+                                title: { display: true, text: chartTitle, font: { size: 14, family: 'Inter', weight: 'bold' }, color: '#1B043F' },
+                                tooltip: { callbacks: { title: ctx => 'Period: ' + ctx[0].label, label: ctx => 'Data: ' + formatNumber(ctx.raw) } }
+                            },
+                            scales: {
+                                x: { grid: { display: false, color: '#D3DCF2' } },
+                                y: { grid: { color: '#D3DCF2' } }
+                            }
+                        }
+                    });
+                    chartInstances.push(chart);
+                    expandBtn.addEventListener('click', () => openExpandedChart(chart, chartTitle));
+                    downloadBtn.addEventListener('click', () => downloadChartImage(chart, chartTitle));
+                });
+            });
+        }
+    }
+
+    function switchTab(tab) {
+        const btnAlerts = document.getElementById('tabAlerts');
+        const btnAll = document.getElementById('tabAll');
+        
+        if (tab === 'alerts') {
+            btnAlerts.className = 'px-4 py-1.5 text-sm font-medium rounded-md bg-grape text-white';
+            btnAll.className = 'px-4 py-1.5 text-sm font-medium rounded-md text-ink hover:bg-canvas';
+        } else {
+            btnAlerts.className = 'px-4 py-1.5 text-sm font-medium rounded-md text-ink hover:bg-canvas';
+            btnAll.className = 'px-4 py-1.5 text-sm font-medium rounded-md bg-grape text-white';
+        }
+        
+        document.getElementById('viewAlerts').classList.toggle('hidden', tab !== 'alerts');
+        document.getElementById('viewAll').classList.toggle('hidden', tab !== 'all');
+    }
+
+    // Modal Expansion Logic
+    function openExpandedChart(originalChart, title) {
+        const modal = document.getElementById('chartModal');
+        const modalTitle = document.getElementById('chartModalTitle');
+        const modalCanvas = document.getElementById('modalCanvas');
+        
+        modalTitle.textContent = title || 'Expanded Chart';
+        
+        modal.classList.remove('hidden');
+        // Trigger reflow to ensure the transition animates
+        void modal.offsetWidth;
+        modal.classList.remove('opacity-0');
+        document.getElementById('chartModalContent').classList.remove('scale-95');
+        
+        if (modalChartInstance) {
+            modalChartInstance.destroy();
+        }
+        
+        // 1. Clone datasets and apply current visibility state
+        const clonedDatasets = originalChart.config.data.datasets.map((ds, index) => {
+            return {
+                ...ds,
+                hidden: !originalChart.isDatasetVisible(index)
+            };
+        });
+
+        // 2. Clone options and scales structure
+        const clonedOptions = {
+            ...originalChart.config.options,
+            maintainAspectRatio: false,
+            animation: false,
+            scales: { ...(originalChart.config.options.scales || {}) }
+        };
+
+        // 3. Apply the current display state of the Y-axes
+        if (originalChart.options.scales) {
+            Object.keys(originalChart.options.scales).forEach(scaleId => {
+                if (clonedOptions.scales[scaleId]) {
+                    clonedOptions.scales[scaleId] = {
+                        ...clonedOptions.scales[scaleId],
+                        display: originalChart.options.scales[scaleId].display
+                    };
+                }
+            });
+        }
+        
+        const config = {
+            type: originalChart.config.type,
+            data: {
+                labels: originalChart.config.data.labels,
+                datasets: clonedDatasets
+            },
+            options: clonedOptions
+        };
+        
+        modalChartInstance = new Chart(modalCanvas.getContext('2d'), config);
+    }
+
+    document.getElementById('downloadModalChartBtn').addEventListener('click', () => {
+        if (modalChartInstance) {
+            const title = document.getElementById('chartModalTitle').textContent;
+            downloadChartImage(modalChartInstance, title);
+        }
+    });
+
+    function closeChartModal() {
+        const modal = document.getElementById('chartModal');
+        modal.classList.add('opacity-0');
+        document.getElementById('chartModalContent').classList.add('scale-95');
+        setTimeout(() => {
+            modal.classList.add('hidden');
+            if (modalChartInstance) {
+                modalChartInstance.destroy();
+                modalChartInstance = null;
+            }
+        }, 300);
+    }
+
+    document.getElementById('closeChartModalBtn').addEventListener('click', closeChartModal);
+    
+    // Close modal when clicking outside the content block
+    document.getElementById('chartModal').addEventListener('click', (e) => {
+        if (e.target === document.getElementById('chartModal')) {
+            closeChartModal();
+        }
+    });
+    
+    // Close modal via Escape key
+    document.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape' && !document.getElementById('chartModal').classList.contains('hidden')) {
+            closeChartModal();
+        }
+    });
+  </script>
+</body>
+</html>
